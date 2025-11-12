@@ -1,0 +1,33 @@
+# Ignorar carpetas específicas 
+/aci/
+/Ejemplos redis-20251029/
+/kubernetes/
+/primera-prueba/
+
+# Ignorar entornos y dependencias
+venv/
+.venv/
+env/
+node_modules/
+dist/
+build/
+
+# Archivos y directorios temporales / de sistema
+__pycache__/
+*.py[cod]
+*.log
+logs/
+.DS_Store
+*.swp
+
+# IDEs / editores
+.vscode/
+.idea/
+
+# Variables de entorno y secretos
+.env
+.secret
+
+# Docker (si usas ficheros locales temporales)
+docker-compose.override.yml
+tmp/
