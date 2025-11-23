@@ -3,6 +3,20 @@ from redis import Redis, RedisError
 import os
 import socket 
 from datetime import datetime
+import joblib
+from keras.models import load_model
+import json
+
+# ---------------------------------------------------------------------------------------------------
+# Cargamos el modelo actual y el threshold
+# ---------------------------------------------------------------------------------------------------
+model = load_model('src/modelo.keras')
+scaler = joblib.load('src/scaler.pkl')
+
+# Recuperamos el threshold
+with open("src/config.json", "r") as f:
+    data = json.load(f)
+    threshold = data['threshold']
 
 # ---------------------------------------------------------------------------------------------------
 # Funciones auxiliares
@@ -66,9 +80,8 @@ def nueva_medicion():
         except Exception as e:
             return f"ERROR: error inesperado al insertar un datos en Redis => {e}", 500
         
-        return f"CORRECTO: <b>Dato={dato}</b> almacenado en la fecha <b>{timestamp_a_fecha_con_formato(timestamp)}</b><br> por el hostname: <b>{socket.gethostname()}</b>"
+        return f"CORRECTO: <b>Dato={dato} °C </b> almacenado en la fecha <b>{timestamp_a_fecha_con_formato(timestamp)}</b><br> por el hostname: <b>{socket.gethostname()}</b>"
     
-
 @app.route("/listar")
 def listar():
     try:
@@ -80,7 +93,7 @@ def listar():
         
         # Si hay muestras => listaremos los valores en la variable salida en formato html
         for time, valor in muestras:
-            salida += f"{timestamp_a_fecha_con_formato(time)} => {valor}<br>" 
+            salida += f"Fecha: {timestamp_a_fecha_con_formato(time)} => Valor: {valor} °C<br>" 
         return salida
     except RedisError as e:
         return f"ERROR: error al listar los datos con Redis => {e}", 500
@@ -111,6 +124,53 @@ def bienvenido_instrucciones():
     "<b>(2) /listar </b>: muestra las mediciones tomadas<br>"
     "<b>(3) /borrar </b>: borra todas las mediciones<br>"
     "<b>(4) / </b>: página principal<br>")
+
+@app.route("/umbral")
+def umbral():
+    return (f" {threshold}")
+
+@app.route("/detectar")
+def detectar_dato_anomalia():
+    # Hacemos una petición GET del valor enviado
+    dato = request.args.get("dato")
+    # Si no hay valor devolveremos un mensaje de error y el "status code" de HTTP 400
+    if dato is None:
+        return "ERROR: falta el parámetro 'dato'", 400
+    # El usuario ha introducido un valor(sea correcto o no)
+    else :
+        try:
+            # La API debe leer valores decimales
+            valor = float(dato)
+        except  ValueError:
+            return "ERROR: el valor debe ser numérico", 400
+
+        # Capturamos la fecha actual, la convertimos el objeto datatime  a un número
+        # flotante que representa el tiempo en segundos, luego la pasamos a milisegundos ya que 
+        # RedisTimeSeries usa milisengundos nativamente y por último 
+        # convertimos este valor a el tipo  entero(el formato de redis lo requiere)
+        timestamp = int(datetime.now().timestamp() * 1000) 
+
+        try:
+            # Ejecutamos el comando de RedisTimeSeries TS.ADD para añadir una instancia
+            # a la serie temporal 'mediciones'
+            redis.execute_command('TS.ADD', 'mediciones', timestamp, valor)
+
+            # Evaluación del dato
+            predict = model.predict(valor)
+
+            if valor < predict or valor > threshold:
+                is_anomulous = False
+            else:
+                is_anomulous = True
+
+        except RedisError as e:
+            return f"ERROR: error al evaluar un dato con Redis => {e}", 500
+        except Exception as e:
+            return f"ERROR: error inesperado al evaluar un datos en Redis => {e}", 500
+        
+        return (f"Dato anómalo: {valor}, Prediccion: {predict}, Es anómalo: {is_anomulous}<br>"
+                f"CORRECTO: <b>Dato={dato} °C </b> almacenado en la fecha <b>{timestamp_a_fecha_con_formato(timestamp)}</b><br> por el hostname: <b>{socket.gethostname()}</b>")
+
 
 if __name__ == "__main__":
     # Obtiene el valor de la variable de entorno PORT y si no está definidad usará el puerto 80
