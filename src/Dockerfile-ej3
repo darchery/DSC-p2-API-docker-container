@@ -21,4 +21,4 @@ EXPOSE 80
 ENV NAME World
 
 # Run main.py when the container launches
-CMD ["python", "/app/src/main-ej2.py"]
+CMD ["python", "/app/src/main-ej3.py"]

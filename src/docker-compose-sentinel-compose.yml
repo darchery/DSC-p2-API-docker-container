@@ -1,6 +1,6 @@
 services:
   web:    
-    image: pr2_dsc:sentinel
+    image: darchery/p2-mediciones-contenedores:ej2
     ports:
       - "4000:80"
     networks:

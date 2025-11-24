@@ -1,3 +1,5 @@
+# Fue ejecutado desde src
+
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
@@ -5,8 +7,9 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-# ADD . /app
-COPY src/ /app
+ADD . /app
+# En este no es necesario ya que el único archivo que el contenedor
+# usará será el main-ej1.py
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
@@ -18,4 +21,5 @@ EXPOSE 80
 ENV NAME World
 
 # Run main.py when the container launches
-CMD ["python", "src/main-ej1.py"]
+CMD ["python", "main-ej1.py"]
+
