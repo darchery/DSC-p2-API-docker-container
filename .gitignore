@@ -4,6 +4,7 @@
 /kubernetes/
 /primera-prueba/
 /src\src_p1\p1_nba_definitivo.ipynb/
+/src\respuesta.json/
 
 # Ignorar entornos y dependencias
 venv/

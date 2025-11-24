@@ -206,7 +206,8 @@ def detectar_dato_anomalia():
         except Exception as e:
             return f"ERROR: error inesperado al evaluar un datos en Redis => {e}", 500
         
-        return (f"Dato: <b>{valor}</b>, Prediccion: <b>{prediccion}</b>, <b>¿Es anómalo?: {es_anomalo}</b>, para el umbral: <b>{threshold}</b><br>"
+        return (f"Para el dato: <b>{valor}</b>, se ha hecho la predicción: <b>{prediccion}</b>.<br>" 
+                f"¿Es {valor} un dato anómalo para el umbral {threshold:.3f}?: <b>{es_anomalo}</b><br>"
                 f"CORRECTO: <b>Dato={dato} °C </b> almacenado en la fecha <b>{timestamp_a_fecha_con_formato(timestamp)}</b><br> por el hostname: <b>{socket.gethostname()}</b>")
 
 
