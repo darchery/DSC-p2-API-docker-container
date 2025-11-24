@@ -108,8 +108,8 @@ threshold = np.percentile(mae, 99)
 
 # Guardamos el threshold
 with open("src/config.json", "w") as f:
-	json.dump({"threshold": threshold}, f)
-print(threshold)
+	json.dump({"threshold": threshold, "windows_size": windows_size}, f)
+
 anomalies = mae > threshold
 
 # Mostrar las fechas de las anomalías
