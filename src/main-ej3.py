@@ -9,10 +9,11 @@ import json
 import numpy as np
 from redis.sentinel import Sentinel
 from redis.cluster import RedisCluster
-# Instalar redis-py-cluster
 
-# CORREGIR Y HACER 2 MODOS DE FUNCIONAMIENTO
-
+# Variable de entorno para el modo de ejecución
+# 1. SIMPLE: igual que main-ej2.oy
+# 2. SENTINEL: usando Redis Sentinel
+# 3. CLUSTER: usando Redis Cluster
 MODO_REDIS = os.getenv('MODO_REDIS', 'SIMPLE')
 
 redis = None
@@ -25,7 +26,7 @@ try:
         #  Redis Setinel
         # ---------------------------------------------------------------------------------------------------
         sentinel_hosts = [
-            (os.getenv('SENTINEL_HOST1', 'sentinel1'), 26379),
+            (os.getenv('SENTINEL_HOST', 'sentinel1'), 26379),
             (os.getenv('SENTINEL_HOST2', 'sentinel2'), 26380),
             (os.getenv('SENTINEL_HOST3', 'sentinel3'), 26381)
         ]
@@ -38,7 +39,7 @@ try:
         #  Redis Cluster
         # ---------------------------------------------------------------------------------------------------
         startup_nodes = [
-            {"host": os.getenv('REDIS_HOST1', 'redis-node-1'), "port": 6379},
+            {"host": os.getenv('REDIS_HOST', 'redis-node-1'), "port": 6379},
             {"host": os.getenv('REDIS_HOST2', 'redis-node-2'), "port": 6379},
             {"host": os.getenv('REDIS_HOST3', 'redis-node-3'), "port": 6379},
         ]

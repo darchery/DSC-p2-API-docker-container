@@ -1,13 +1,14 @@
 services:
   web:    
-    image: darchery/p2-mediciones-contenedores:ej2
+    image: darchery/p2-mediciones-contenedores:ej3
     ports:
       - "4000:80"
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.8
+        ipv4_address: 172.28.0.8
 
     environment:
+      - MODO_REDIS=CLUSTER
       - REDIS_HOST=redis-node-1
       - REDIS_HOST2=redis-node-2
       - REDIS_HOST3=redis-node-3
@@ -24,11 +25,11 @@ services:
     environment:
       # Habilitar el modo clúster
       #- REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf
-      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.19.0.2 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
+      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.28.0.2 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
       # Para la imagen de Redis Stack, el módulo TimeSeries ya está cargado.
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.2
+        ipv4_address: 172.28.0.2
     healthcheck:
       test: ["CMD", "redis-cli", "-h", "localhost", "PING"]
       interval: 10s
@@ -42,10 +43,10 @@ services:
       - "6002:6379"
       - "16002:16379"
     environment:
-      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.19.0.3 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
+      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.28.0.3 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.3      
+        ipv4_address: 172.28.0.3      
 
 
   redis-node-3:
@@ -57,10 +58,10 @@ services:
     environment:
       # Habilitar el modo clúster
       #- REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf
-      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.19.0.4 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
+      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.28.0.4 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.4      
+        ipv4_address: 172.28.0.4      
 
 
   redis-node-4:
@@ -72,10 +73,10 @@ services:
     environment:
       # Habilitar el modo clúster
       #- REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf
-      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.19.0.5 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
+      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.28.0.5 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.5      
+        ipv4_address: 172.28.0.5      
 
 
   redis-node-5:
@@ -87,10 +88,10 @@ services:
     environment:
       # Habilitar el modo clúster
       #- REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf
-      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.19.0.6 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
+      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.28.0.6 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.6      
+        ipv4_address: 172.28.0.6      
 
 
   redis-node-6:
@@ -102,10 +103,10 @@ services:
     environment:
       # Habilitar el modo clúster
       #- REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf
-      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.19.0.7 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
+      - REDIS_ARGS=--cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes --port 6379 --cluster-config-file nodes.conf --cluster-announce-ip 172.28.0.7 --cluster-announce-port 6379 --cluster-announce-bus-port 16379
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.7      
+        ipv4_address: 172.28.0.7      
 
 
 
@@ -123,12 +124,12 @@ services:
       redis-node-6: { condition: service_healthy }
     networks:
       redis-cluster-net:
-        ipv4_address: 172.19.0.9 
+        ipv4_address: 172.28.0.9 
 
 networks:
   redis-cluster-net:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.19.0.0/16    
+        - subnet: 172.28.0.0/16    
 
