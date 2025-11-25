@@ -9,6 +9,83 @@ import json
 import numpy as np
 from redis.sentinel import Sentinel
 from redis.cluster import RedisCluster
+# Instalar redis-py-cluster
+
+# CORREGIR Y HACER 2 MODOS DE FUNCIONAMIENTO
+
+MODO_REDIS = os.getenv('MODO_REDIS', 'SIMPLE')
+
+redis = None
+
+print(f"Iniciando aplicación en modo: {MODO_REDIS}")
+
+try:
+    if MODO_REDIS == 'SENTINEL':
+        # ---------------------------------------------------------------------------------------------------
+        #  Redis Setinel
+        # ---------------------------------------------------------------------------------------------------
+        sentinel_hosts = [
+            (os.getenv('SENTINEL_HOST1', 'sentinel1'), 26379),
+            (os.getenv('SENTINEL_HOST2', 'sentinel2'), 26380),
+            (os.getenv('SENTINEL_HOST3', 'sentinel3'), 26381)
+        ]
+        sentinel = Sentinel(sentinel_hosts ,socket_timeout=0.1)
+
+        master_info = sentinel.discover_master('mymaster')
+        redis = sentinel.master_for('mymaster', socket_timeout=0.1)
+    elif MODO_REDIS == 'CLUSTER':
+        # ---------------------------------------------------------------------------------------------------
+        #  Redis Cluster
+        # ---------------------------------------------------------------------------------------------------
+        startup_nodes = [
+            {"host": os.getenv('REDIS_HOST1', 'redis-node-1'), "port": 6379},
+            {"host": os.getenv('REDIS_HOST2', 'redis-node-2'), "port": 6379},
+            {"host": os.getenv('REDIS_HOST3', 'redis-node-3'), "port": 6379},
+        ]
+
+        redis = RedisCluster(
+            startup_nodes=startup_nodes,
+            decode_responses=True,
+            skip_full_coverage_check=True,
+            socket_timeout=5,
+            socket_connect_timeout=5,
+        )
+    else: 
+        # -----------------------------------------------------------------------------------------------
+        #  Modo Simple (Compatibilidad Ej. 1 y 2)
+        # -----------------------------------------------------------------------------------------------
+        # Obtiene el valor de la variable de entorno REDIS_HOST, si esta no está definida, devolverá por defecto "localhost",
+        # en ella está la dirección del servidor redis al que se intentará conectar
+        REDIS_HOST = os.getenv('REDIS_HOST', "localhost")
+
+        print("REDIS_HOST: "+REDIS_HOST) # Confirmamos el host usado
+
+        # Crea un cliente de redis que se conectará a REDIS_HOST, se usará la db 0, tendrá tiempos de espera(segundos) para 
+        # conectarse y para realizar operaciones(evita que el programa se bloquee si Redis no responde) y usará el puerto 
+        # 6379(predeterminado de redis) 
+        redis = Redis(host=REDIS_HOST, db=0, socket_connect_timeout=2, socket_timeout=2, decode_responses=True)
+        
+    #---------------------------------------------------------------------------------------------------
+    # Comprabación del estado de los centinales, cluster y cliente redis
+    #---------------------------------------------------------------------------------------------------
+    print("Comprobar estado del cliente redis, para Cluster, Sentinel o Redis simple:")
+    if MODO_REDIS == 'CLUSTER':
+        print("Cluster info:", redis.cluster_info())
+    elif MODO_REDIS == 'SENTINEL':
+        print("Sentinel info:")
+        print("El maestro acutal es: ", master_info)
+        print("Ejecución de 'INFO SENTINEL' en cada nodo centinela:")
+        for index, sentinel_connection in enumerate(sentinel.sentinel):
+            try:
+                info_sen = sentinel_connection.execute_command('INFO', 'SENTINEL')
+                host_info = sentinel_hosts[index][0]
+                print(f"Host: {host_info}, status: {info_sen}")
+            except Exception as e:
+                print(f"No se pudo contactar con el Sentinel {index}: {e}")
+    else:
+        print("Ping Redis: ", redis.ping())
+except Exception as e:
+    print(f"ERROR: No se pudo conectar a Redis en modo{MODO_REDIS}: {e}")
 
 # ---------------------------------------------------------------------------------------------------
 # Cargamos el modelo actual, escalador y json con la configuración de la práctica 1
@@ -34,19 +111,6 @@ def timestamp_a_fecha_con_formato(timestamp):
 # ---------------------------------------------------------------------------------------------------
 # Código plantilla basado en app.py
 # ---------------------------------------------------------------------------------------------------
-
-# Nos conectamos a redis
-
-# Obtiene el valor de la variable de entorno REDIS_HOST, si esta no está definida, devolverá por defecto "localhost",
-# en ella está la dirección del servidor redis al que se intentará conectar
-REDIS_HOST = os.getenv('REDIS_HOST', "localhost")
-
-print("REDIS_HOST: "+REDIS_HOST) # Confirmamos el host usado
-
-# Crea un cliente de redis que se conectará a REDIS_HOST, se usará la db 0, tendrá tiempos de espera(segundos) para 
-# conectarse y para realizar operaciones(evita que el programa se bloquee si Redis no responde) y usará el puerto 
-# 6379(predeterminado de redis) 
-redis = Redis(host=REDIS_HOST, db=0, socket_connect_timeout=2, socket_timeout=2, decode_responses=True)
 
 # Creamos la instancia de la aplicación web Flask
 app = Flask(__name__)
@@ -211,36 +275,6 @@ def detectar_dato_anomalia():
         return (f"Para el dato: <b>{valor}</b>, se ha hecho la predicción: <b>{prediccion}</b>.<br>" 
                 f"¿Es {valor} un dato anómalo para el umbral {threshold:.3f}?: <b>{es_anomalo}</b><br>"
                 f"CORRECTO: <b>Dato={dato} °C </b> almacenado en la fecha <b>{timestamp_a_fecha_con_formato(timestamp)}</b><br> por el hostname: <b>{socket.gethostname()}</b>")
-
-
-# ---------------------------------------------------------------------------------------------------
-#  Redis Setinel
-# ---------------------------------------------------------------------------------------------------
-sentinel = Sentinel([(SENTINEL_HOST, SENTINEL_PORT),
-    (SENTINEL_HOST2, SENTINEL_PORT2),
-    (SENTINEL_HOST3, SENTINEL_PORT3)],
-    socket_timeout=0.1)
-
-master_info = sentinel.discover_master('mymaster')
-redis = sentinel.master_for('mymaster', socket_timeout=0.1)
-
-# ---------------------------------------------------------------------------------------------------
-#  Redis Cluster
-# ---------------------------------------------------------------------------------------------------
-
-startup_nodes = [
-    {"host": REDIS_HOST1, "port": 6379},
-    {"host": REDIS_HOST2, "port": 6379},
-    {"host": REDIS_HOST3, "port": 6379},
-]
-
-redis = RedisCluster(
-    startup_nodes=startup_nodes,
-    decode_responses=True,
-    skip_full_coverage_check=True,
-    socket_timeout=5,
-    socket_connect_timeout=5,
-)
 
 if __name__ == "__main__":
     # Obtiene el valor de la variable de entorno PORT y si no está definidad usará el puerto 80
